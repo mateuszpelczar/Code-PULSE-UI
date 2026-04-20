@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { BlogPostService } from '../services/blog-post-service';
+import { AddBlogPostRequest } from '../models/blogpost.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-add-blogpost',
@@ -8,6 +11,8 @@ import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angula
   styleUrl: './add-blogpost.css',
 })
 export class AddBlogpost {
+  blogPostService = inject(BlogPostService);
+  router = inject(Router);
   addBlogPostFrom = new FormGroup({
     title: new FormControl<string>('', {
       nonNullable: true,
@@ -44,6 +49,28 @@ export class AddBlogpost {
 
   onSubmit() {
     const formRawValue = this.addBlogPostFrom.getRawValue();
-    console.log(formRawValue);
+
+    const requestDto: AddBlogPostRequest = {
+      title: formRawValue.title,
+      shortDescription: formRawValue.shortDescription,
+      content: formRawValue.content,
+      featuredImageUrl: formRawValue.featuredImageUrl,
+      urlHandle: formRawValue.urlHandle,
+      publishedDate: new Date(formRawValue.publishDate),
+      author: formRawValue.author,
+      isVisible: formRawValue.isVisible,
+    };
+
+    this.blogPostService.createBlogPost(requestDto).subscribe({
+      next: (response) => {
+        console.log(response);
+
+        //navigate to the blog post list page
+        this.router.navigate(['/admin/blogposts']);
+      },
+      error: () => {
+        console.error('Something went wrong');
+      },
+    });
   }
 }
